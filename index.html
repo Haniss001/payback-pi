@@ -1,8 +1,3 @@
-
-Hanis Imeroski <imeroskihanis@gmail.com>
-12:22 AM (0 minutes ago)
-to me
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -10,7 +5,8 @@ to me
 <title>Payback Pi</title>
 <script src="https://sdk.minepi.com/pi-sdk.js"></script>
 <script>
-Pi.init({ version: "2.0", sandbox: false });
+// Вклучен Sandbox за тестирање
+Pi.init({ version: "2.0", sandbox: true });
 
 function makePayment() {
 const scopes = ['username', 'payments'];
@@ -29,27 +25,24 @@ metadata: { productId: "test-01" }
 const callbacks = {
 onReadyForServerApproval: function(paymentId) {
 console.log("Ready for approval:", paymentId);
-// Повикување одобрување преку порталот
-fetch(`https://api.minepi.com/v2/payments/${paymentId}/approve`, {
-method: 'POST',
-headers: {
-'Authorization': 'Key YOUR_API_KEY_HERE'
-}
-}).catch(err => console.log(err));
+alert("Payment initiated! ID: " + paymentId);
 },
 onReadyForServerCompletion: function(paymentId, txid) {
 console.log("Ready for completion:", paymentId, txid);
-alert("Payment Completed!");
+alert("Payment Completed Successfully!");
 },
 onCancel: function(paymentId) {
 console.log("Cancelled:", paymentId);
 },
 onError: function(error, payment) {
 console.error("Error:", error);
+alert("Error: " + (error.message || JSON.stringify(error)));
 }
 };
 
 Pi.createPayment(paymentData, callbacks);
+}).catch(function(err) {
+alert("Auth Error: " + err);
 });
 }
 </script>
@@ -57,7 +50,7 @@ Pi.createPayment(paymentData, callbacks);
 <body style="display:flex; justify-content:center; align-items:center; height:100vh; font-family:sans-serif; background:#f4f4f9;">
 <div style="text-align:center;">
 <h1>Payback Pi App</h1>
-<p>Welcome to Payback Pi on Mainnet!</p>
+<p>Welcome to Payback Pi!</p>
 <button onclick="makePayment()" style="padding:12px 24px; font-size:16px; background:#8a2be2; color:white; border:none; border-radius:5px; cursor:pointer;">
 Test Pi Payment
 </button>
