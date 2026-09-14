@@ -5,7 +5,10 @@
 <title>Payback Pi</title>
 <script src="https://sdk.minepi.com/pi-sdk.js"></script>
 <script>
-Pi.init({ version: "2.0", sandbox: true });
+Pi.init({ version: "2.0", sandbox: false });
+
+// СТАВИ ГО ТВОЈОТ API KEY ТУКА:
+const API_KEY = "wdstjzheqklgo8vi3b5tohwhgy1fsfkmdqh43hbacfomieqjvpx8aozt2zzma8yr";
 
 function makePayment() {
 const scopes = ['username', 'payments'];
@@ -23,16 +26,39 @@ metadata: { productId: "test-01" }
 
 const callbacks = {
 onReadyForServerApproval: function(paymentId) {
-console.log("Ready for server approval:", paymentId);
+console.log("Approving payment:", paymentId);
+
+// Автоматско одобрување преку CORS proxy за да го замени бекендот
+fetch("https://corsproxy.io/?" + encodeURIComponent(`https://api.minepi.com/v2/payments/${paymentId}/approve`), {
+method: 'POST',
+headers: {
+'Authorization': 'Key ' + API_KEY,
+'Content-Type': 'application/json'
+}
+}).then(res => res.json())
+.then(data => console.log("Approved successfully:", data))
+.catch(err => console.error("Approval error:", err));
 },
 onReadyForServerCompletion: function(paymentId, txid) {
-console.log("Ready for server completion:", paymentId, txid);
+console.log("Completing payment:", paymentId, txid);
+
+// Автоматско комплетирање
+fetch("https://corsproxy.io/?" + encodeURIComponent(`https://api.minepi.com/v2/payments/${paymentId}/complete`), {
+method: 'POST',
+headers: {
+'Authorization': 'Key ' + API_KEY,
+'Content-Type': 'application/json'
+},
+body: JSON.stringify({ txid: txid })
+}).then(res => res.json())
+.then(data => alert("Плаќањето е успешно завршено!"))
+.catch(err => console.error("Completion error:", err));
 },
 onCancel: function(paymentId) {
-console.log("Payment cancelled:", paymentId);
+console.log("Cancelled:", paymentId);
 },
 onError: function(error, payment) {
-console.error("Payment error:", error);
+console.error("Error:", error);
 }
 };
 
@@ -46,7 +72,7 @@ console.error("Auth error:", err);
 <body style="display:flex; justify-content:center; align-items:center; height:100vh; font-family:sans-serif; background:#f4f4f9;">
 <div style="text-align:center;">
 <h1>Payback Pi App</h1>
-<p>Welcome to Payback Pi!</p>
+<p>Welcome to Payback Pi on Mainnet!</p>
 <button onclick="makePayment()" style="padding:12px 24px; font-size:16px; background:#8a2be2; color:white; border:none; border-radius:5px; cursor:pointer;">
 Test Pi Payment
 </button>
