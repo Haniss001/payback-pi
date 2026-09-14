@@ -11,7 +11,15 @@ function makePayment() {
 const scopes = ['username', 'payments'];
 
 function onIncompletePaymentFound(payment) {
-console.log("Incomplete payment:", payment);
+console.log("Incomplete payment found:", payment);
+if (payment.identifier && payment.transaction) {
+fetch("/api/complete", {
+method: 'POST',
+headers: { 'Content-Type': 'application/json' },
+body: JSON.stringify({ paymentId: payment.identifier, txid: payment.transaction.txid })
+}).then(res => res.json())
+.then(data => console.log("Incomplete payment resolved:", data));
+}
 }
 
 Pi.authenticate(scopes, onIncompletePaymentFound).then(function(auth) {
@@ -28,7 +36,7 @@ method: 'POST',
 headers: { 'Content-Type': 'application/json' },
 body: JSON.stringify({ paymentId: paymentId })
 }).then(res => res.json())
-.then(data => console.log("Approved via Vercel:", data));
+.then(data => console.log("Approved:", data));
 },
 onReadyForServerCompletion: function(paymentId, txid) {
 fetch("/api/complete", {
@@ -38,8 +46,12 @@ body: JSON.stringify({ paymentId: paymentId, txid: txid })
 }).then(res => res.json())
 .then(data => alert("Плаќањето е успешно завршено!"));
 },
-onCancel: function(paymentId) {},
-onError: function(error, payment) {}
+onCancel: function(paymentId) {
+console.log("Cancelled:", paymentId);
+},
+onError: function(error, payment) {
+console.error("Error:", error);
+}
 };
 
 Pi.createPayment(paymentData, callbacks);
