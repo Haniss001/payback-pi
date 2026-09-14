@@ -8,6 +8,13 @@
 Pi.init({ version: "2.0", sandbox: false });
 
 function makePayment() {
+const scopes = ['username', 'payments'];
+
+function onIncompletePaymentFound(payment) {
+console.log("Incomplete payment found:", payment);
+}
+
+Pi.authenticate(scopes, onIncompletePaymentFound).then(function(auth) {
 const paymentData = {
 amount: 0.1,
 memo: "Test payment for Payback Pi",
@@ -20,17 +27,22 @@ console.log("Ready for approval:", paymentId);
 },
 onReadyForServerCompletion: function(paymentId, txid) {
 console.log("Ready for completion:", paymentId, txid);
-alert("Payment Completed Successfully!");
+alert("Payment Completed!");
 },
 onCancel: function(paymentId) {
 console.log("Cancelled:", paymentId);
 },
 onError: function(error, payment) {
 console.error("Error:", error);
+alert("Error: " + error.message);
 }
 };
 
 Pi.createPayment(paymentData, callbacks);
+}).catch(function(error) {
+console.error("Auth error:", error);
+alert("Auth Error: " + error);
+});
 }
 </script>
 </head>
