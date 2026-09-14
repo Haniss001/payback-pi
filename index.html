@@ -5,13 +5,13 @@
 <title>Payback Pi</title>
 <script src="https://sdk.minepi.com/pi-sdk.js"></script>
 <script>
-Pi.init({ version: "2.0", sandbox: false });
+Pi.init({ version: "2.0", sandbox: true });
 
 function makePayment() {
 const scopes = ['username', 'payments'];
 
 function onIncompletePaymentFound(payment) {
-console.log("Incomplete payment:", payment);
+console.log("Incomplete payment found:", payment);
 }
 
 Pi.authenticate(scopes, onIncompletePaymentFound).then(function(auth) {
@@ -23,20 +23,22 @@ metadata: { productId: "test-01" }
 
 const callbacks = {
 onReadyForServerApproval: function(paymentId) {
-console.log("Ready for approval:", paymentId);
+console.log("Ready for server approval:", paymentId);
 },
 onReadyForServerCompletion: function(paymentId, txid) {
-console.log("Ready for completion:", paymentId, txid);
+console.log("Ready for server completion:", paymentId, txid);
 },
 onCancel: function(paymentId) {
-console.log("Cancelled:", paymentId);
+console.log("Payment cancelled:", paymentId);
 },
 onError: function(error, payment) {
-console.error("Error:", error);
+console.error("Payment error:", error);
 }
 };
 
 Pi.createPayment(paymentData, callbacks);
+}).catch(function(err) {
+console.error("Auth error:", err);
 });
 }
 </script>
@@ -44,7 +46,7 @@ Pi.createPayment(paymentData, callbacks);
 <body style="display:flex; justify-content:center; align-items:center; height:100vh; font-family:sans-serif; background:#f4f4f9;">
 <div style="text-align:center;">
 <h1>Payback Pi App</h1>
-<p>Welcome to Payback Pi on Mainnet!</p>
+<p>Welcome to Payback Pi!</p>
 <button onclick="makePayment()" style="padding:12px 24px; font-size:16px; background:#8a2be2; color:white; border:none; border-radius:5px; cursor:pointer;">
 Test Pi Payment
 </button>
