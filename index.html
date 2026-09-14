@@ -9,20 +9,40 @@ Pi.init({ version: "2.0", sandbox: true });
 
 const API_KEY = "wdstjzheqklgo8vi3b5tohwhgy1fsfkmdqh43hbacfomieqjvpx8aozt2zzma8yr";
 
+function approvePayment(paymentId) {
+const xhr = new XMLHttpRequest();
+xhr.open("POST", "https://api.sandbox.minepi.com/v2/payments/" + paymentId + "/approve", true);
+xhr.setRequestHeader("Authorization", "Key " + API_KEY);
+xhr.setRequestHeader("Content-Type", "application/json");
+xhr.onreadystatechange = function () {
+if (xhr.readyState === 4) {
+console.log("Approve response:", xhr.responseText);
+}
+};
+xhr.send();
+}
+
+function completePayment(paymentId, txid) {
+const xhr = new XMLHttpRequest();
+xhr.open("POST", "https://api.sandbox.minepi.com/v2/payments/" + paymentId + "/complete", true);
+xhr.setRequestHeader("Authorization", "Key " + API_KEY);
+xhr.setRequestHeader("Content-Type", "application/json");
+xhr.onreadystatechange = function () {
+if (xhr.readyState === 4) {
+console.log("Complete response:", xhr.responseText);
+alert("Payment Completed!");
+}
+};
+xhr.send(JSON.stringify({ txid: txid }));
+}
+
 function makePayment() {
 const scopes = ['username', 'payments'];
 
 function onIncompletePaymentFound(payment) {
 console.log("Incomplete payment found:", payment);
-if (payment.identifier) {
-fetch("https://corsproxy.io/?" + encodeURIComponent(`https://api.minepi.com/v2/payments/${payment.identifier}/complete`), {
-method: 'POST',
-headers: {
-'Authorization': 'Key ' + API_KEY,
-'Content-Type': 'application/json'
-},
-body: JSON.stringify({ txid: payment.transaction ? payment.transaction.txid : "incomplete" })
-});
+if (payment.identifier && payment.transaction) {
+completePayment(payment.identifier, payment.transaction.txid);
 }
 }
 
@@ -35,29 +55,12 @@ metadata: { productId: "test-01" }
 
 const callbacks = {
 onReadyForServerApproval: function(paymentId) {
-console.log("Approving payment:", paymentId);
-fetch("https://corsproxy.io/?" + encodeURIComponent(`https://api.minepi.com/v2/payments/${paymentId}/approve`), {
-method: 'POST',
-headers: {
-'Authorization': 'Key ' + API_KEY,
-'Content-Type': 'application/json'
-}
-}).then(res => res.json())
-.then(data => console.log("Approved:", data))
-.catch(err => console.error("Approval error:", err));
+console.log("OnReadyForServerApproval called with ID:", paymentId);
+approvePayment(paymentId);
 },
 onReadyForServerCompletion: function(paymentId, txid) {
-console.log("Completing payment:", paymentId, txid);
-fetch("https://corsproxy.io/?" + encodeURIComponent(`https://api.minepi.com/v2/payments/${paymentId}/complete`), {
-method: 'POST',
-headers: {
-'Authorization': 'Key ' + API_KEY,
-'Content-Type': 'application/json'
-},
-body: JSON.stringify({ txid: txid })
-}).then(res => res.json())
-.then(data => alert("Успешно завршено плаќање!"))
-.catch(err => console.error("Completion error:", err));
+console.log("OnReadyForServerCompletion called:", paymentId, txid);
+completePayment(paymentId, txid);
 },
 onCancel: function(paymentId) {
 console.log("Cancelled:", paymentId);
@@ -77,7 +80,7 @@ console.error("Auth error:", err);
 <body style="display:flex; justify-content:center; align-items:center; height:100vh; font-family:sans-serif; background:#f4f4f9;">
 <div style="text-align:center;">
 <h1>Payback Pi App</h1>
-<p>Welcome to Payback Pi Sandbox Test!</p>
+<p>Welcome to Payback Pi Sandbox!</p>
 <button onclick="makePayment()" style="padding:12px 24px; font-size:16px; background:#8a2be2; color:white; border:none; border-radius:5px; cursor:pointer;">
 Test Pi Payment
 </button>
