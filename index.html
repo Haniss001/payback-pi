@@ -12,13 +12,19 @@ const scopes = ['username', 'payments'];
 
 function onIncompletePaymentFound(payment) {
 console.log("Incomplete payment found:", payment);
-if (payment.identifier && payment.transaction) {
+if (payment.identifier) {
+// Ако нема txid, празниме со празен стринг или "incomplete" за да се поништи на серверот
+const txid = payment.transaction && payment.transaction.txid ? payment.transaction.txid : "force-cancel";
 fetch("/api/complete", {
 method: 'POST',
 headers: { 'Content-Type': 'application/json' },
-body: JSON.stringify({ paymentId: payment.identifier, txid: payment.transaction.txid })
+body: JSON.stringify({ paymentId: payment.identifier, txid: txid })
 }).then(res => res.json())
-.then(data => console.log("Incomplete payment resolved:", data));
+.then(data => {
+console.log("Cleared pending payment:", data);
+alert("Заглавената трансакција е исчистена! Кликни повторно за ново плаќање.");
+location.reload();
+});
 }
 }
 
