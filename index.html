@@ -5,45 +5,13 @@
 <title>Payback Pi</title>
 <script src="https://sdk.minepi.com/pi-sdk.js"></script>
 <script>
-Pi.init({ version: "2.0", sandbox: true });
-
-const API_KEY = "wdstjzheqklgo8vi3b5tohwhgy1fsfkmdqh43hbacfomieqjvpx8aozt2zzma8yr";
-
-function approvePayment(paymentId) {
-const xhr = new XMLHttpRequest();
-xhr.open("POST", "https://api.sandbox.minepi.com/v2/payments/" + paymentId + "/approve", true);
-xhr.setRequestHeader("Authorization", "Key " + API_KEY);
-xhr.setRequestHeader("Content-Type", "application/json");
-xhr.onreadystatechange = function () {
-if (xhr.readyState === 4) {
-console.log("Approve response:", xhr.responseText);
-}
-};
-xhr.send();
-}
-
-function completePayment(paymentId, txid) {
-const xhr = new XMLHttpRequest();
-xhr.open("POST", "https://api.sandbox.minepi.com/v2/payments/" + paymentId + "/complete", true);
-xhr.setRequestHeader("Authorization", "Key " + API_KEY);
-xhr.setRequestHeader("Content-Type", "application/json");
-xhr.onreadystatechange = function () {
-if (xhr.readyState === 4) {
-console.log("Complete response:", xhr.responseText);
-alert("Payment Completed!");
-}
-};
-xhr.send(JSON.stringify({ txid: txid }));
-}
+Pi.init({ version: "2.0", sandbox: false });
 
 function makePayment() {
 const scopes = ['username', 'payments'];
 
 function onIncompletePaymentFound(payment) {
-console.log("Incomplete payment found:", payment);
-if (payment.identifier && payment.transaction) {
-completePayment(payment.identifier, payment.transaction.txid);
-}
+console.log("Incomplete payment:", payment);
 }
 
 Pi.authenticate(scopes, onIncompletePaymentFound).then(function(auth) {
@@ -55,24 +23,26 @@ metadata: { productId: "test-01" }
 
 const callbacks = {
 onReadyForServerApproval: function(paymentId) {
-console.log("OnReadyForServerApproval called with ID:", paymentId);
-approvePayment(paymentId);
+fetch("/api/approve", {
+method: 'POST',
+headers: { 'Content-Type': 'application/json' },
+body: JSON.stringify({ paymentId: paymentId })
+}).then(res => res.json())
+.then(data => console.log("Approved via Vercel:", data));
 },
 onReadyForServerCompletion: function(paymentId, txid) {
-console.log("OnReadyForServerCompletion called:", paymentId, txid);
-completePayment(paymentId, txid);
+fetch("/api/complete", {
+method: 'POST',
+headers: { 'Content-Type': 'application/json' },
+body: JSON.stringify({ paymentId: paymentId, txid: txid })
+}).then(res => res.json())
+.then(data => alert("Плаќањето е успешно завршено!"));
 },
-onCancel: function(paymentId) {
-console.log("Cancelled:", paymentId);
-},
-onError: function(error, payment) {
-console.error("Error:", error);
-}
+onCancel: function(paymentId) {},
+onError: function(error, payment) {}
 };
 
 Pi.createPayment(paymentData, callbacks);
-}).catch(function(err) {
-console.error("Auth error:", err);
 });
 }
 </script>
@@ -80,7 +50,7 @@ console.error("Auth error:", err);
 <body style="display:flex; justify-content:center; align-items:center; height:100vh; font-family:sans-serif; background:#f4f4f9;">
 <div style="text-align:center;">
 <h1>Payback Pi App</h1>
-<p>Welcome to Payback Pi Sandbox!</p>
+<p>Welcome to Payback Pi!</p>
 <button onclick="makePayment()" style="padding:12px 24px; font-size:16px; background:#8a2be2; color:white; border:none; border-radius:5px; cursor:pointer;">
 Test Pi Payment
 </button>
