@@ -1,3 +1,8 @@
+
+Hanis Imeroski <imeroskihanis@gmail.com>
+12:22 AM (0 minutes ago)
+to me
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -11,7 +16,7 @@ function makePayment() {
 const scopes = ['username', 'payments'];
 
 function onIncompletePaymentFound(payment) {
-console.log("Incomplete payment found:", payment);
+console.log("Incomplete payment:", payment);
 }
 
 Pi.authenticate(scopes, onIncompletePaymentFound).then(function(auth) {
@@ -24,6 +29,13 @@ metadata: { productId: "test-01" }
 const callbacks = {
 onReadyForServerApproval: function(paymentId) {
 console.log("Ready for approval:", paymentId);
+// Повикување одобрување преку порталот
+fetch(`https://api.minepi.com/v2/payments/${paymentId}/approve`, {
+method: 'POST',
+headers: {
+'Authorization': 'Key YOUR_API_KEY_HERE'
+}
+}).catch(err => console.log(err));
 },
 onReadyForServerCompletion: function(paymentId, txid) {
 console.log("Ready for completion:", paymentId, txid);
@@ -34,14 +46,10 @@ console.log("Cancelled:", paymentId);
 },
 onError: function(error, payment) {
 console.error("Error:", error);
-alert("Error: " + error.message);
 }
 };
 
 Pi.createPayment(paymentData, callbacks);
-}).catch(function(error) {
-console.error("Auth error:", error);
-alert("Auth Error: " + error);
 });
 }
 </script>
