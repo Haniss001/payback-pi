@@ -1,25 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Payback Pi</title>
+<script src="https://sdk.minepi.com/pi-sdk.js"></script>
+<script>
+Pi.init({ version: "2.0", sandbox: false });
+
 function makePayment() {
-  const paymentData = {
-    amount: 0.1,
-    memo: "Test payment for Payback Pi",
-    metadata: { productId: "test-01" }
-  };
+const paymentData = {
+amount: 0.1,
+memo: "Test payment for Payback Pi",
+metadata: { productId: "test-01" }
+};
 
-  const callbacks = {
-    onReadyForServerApproval: function(paymentId) {
-      console.log("Ready for approval:", paymentId);
-    },
-    onReadyForServerCompletion: function(paymentId, txid) {
-      console.log("Ready for completion:", paymentId, txid);
-      alert("Payment Completed Successfully!");
-    },
-    onCancel: function(paymentId) {
-      console.log("Cancelled:", paymentId);
-    },
-    onError: function(error, payment) {
-      console.error("Error:", error);
-    }
-  };
-
-  Pi.createPayment(paymentData, callbacks);
+const callbacks = {
+onReadyForServerApproval: function(paymentId) {
+console.log("Ready for approval:", paymentId);
+},
+onReadyForServerCompletion: function(paymentId, txid) {
+console.log("Ready for completion:", paymentId, txid);
+alert("Payment Completed Successfully!");
+},
+onCancel: function(paymentId) {
+console.log("Cancelled:", paymentId);
+},
+onError: function(error, payment) {
+console.error("Error:", error);
 }
+};
+
+Pi.createPayment(paymentData, callbacks);
+}
+</script>
+</head>
+<body style="display:flex; justify-content:center; align-items:center; height:100vh; font-family:sans-serif; background:#f4f4f9;">
+<div style="text-align:center;">
+<h1>Payback Pi App</h1>
+<p>Welcome to Payback Pi on Mainnet!</p>
+<button onclick="makePayment()" style="padding:12px 24px; font-size:16px; background:#8a2be2; color:white; border:none; border-radius:5px; cursor:pointer;">
+Test Pi Payment
+</button>
+</div>
+</body>
+</html>
