@@ -5,9 +5,14 @@
 <title>Payback Pi</title>
 <script src="https://sdk.minepi.com/pi-sdk.js"></script>
 <script>
+try {
 Pi.init({ version: "2.0", sandbox: false });
+} catch (e) {
+alert("Init error: " + e.message);
+}
 
 function makePayment() {
+alert("Копчето е кликнато, започнувам...");
 const scopes = ['username', 'payments'];
 
 function onIncompletePaymentFound(payment) {
@@ -18,15 +23,12 @@ method: 'POST',
 headers: { 'Content-Type': 'application/json' },
 body: JSON.stringify({ paymentId: payment.identifier, txid: "cancelled" })
 }).then(res => res.json())
-.then(data => {
-console.log("Pending payment cleared:", data);
-alert("Заглавената трансакција е исчистена. Ве молиме освежете ја страницата!");
-location.reload();
-});
+.then(data => console.log("Cleared:", data));
 }
 }
 
 Pi.authenticate(scopes, onIncompletePaymentFound).then(function(auth) {
+alert("Успешна автентикација за: " + auth.user.username);
 const paymentData = {
 amount: 0.1,
 memo: "Test payment for Payback Pi",
@@ -35,6 +37,7 @@ metadata: { productId: "test-01" }
 
 const callbacks = {
 onReadyForServerApproval: function(paymentId) {
+alert("Праќам за одобрување...");
 fetch("/api/approve", {
 method: 'POST',
 headers: { 'Content-Type': 'application/json' },
@@ -51,14 +54,16 @@ body: JSON.stringify({ paymentId: paymentId, txid: txid })
 .then(data => alert("Плаќањето е успешно завршено!"));
 },
 onCancel: function(paymentId) {
-console.log("Cancelled:", paymentId);
+alert("Плаќањето е откажано.");
 },
 onError: function(error, payment) {
-console.error("Error:", error);
+alert("Грешка при плаќање: " + JSON.stringify(error));
 }
 };
 
 Pi.createPayment(paymentData, callbacks);
+}).catch(function(error) {
+alert("Грешка во автентикација: " + JSON.stringify(error));
 });
 }
 </script>
