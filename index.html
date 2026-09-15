@@ -5,30 +5,16 @@
 <title>Payback Pi</title>
 <script src="https://sdk.minepi.com/pi-sdk.js"></script>
 <script>
-try {
 Pi.init({ version: "2.0", sandbox: false });
-} catch (e) {
-alert("Init error: " + e.message);
-}
 
 function makePayment() {
-alert("Копчето е кликнато, започнувам...");
 const scopes = ['username', 'payments'];
 
 function onIncompletePaymentFound(payment) {
 console.log("Incomplete payment found:", payment);
-if (payment.identifier) {
-fetch("/api/complete", {
-method: 'POST',
-headers: { 'Content-Type': 'application/json' },
-body: JSON.stringify({ paymentId: payment.identifier, txid: "cancelled" })
-}).then(res => res.json())
-.then(data => console.log("Cleared:", data));
-}
 }
 
 Pi.authenticate(scopes, onIncompletePaymentFound).then(function(auth) {
-alert("Успешна автентикација за: " + auth.user.username);
 const paymentData = {
 amount: 0.1,
 memo: "Test payment for Payback Pi",
@@ -37,13 +23,13 @@ metadata: { productId: "test-01" }
 
 const callbacks = {
 onReadyForServerApproval: function(paymentId) {
-alert("Праќам за одобрување...");
 fetch("/api/approve", {
 method: 'POST',
 headers: { 'Content-Type': 'application/json' },
 body: JSON.stringify({ paymentId: paymentId })
 }).then(res => res.json())
-.then(data => console.log("Approved:", data));
+.then(data => console.log("Approved:", data))
+.catch(err => alert("Approve Error: " + err));
 },
 onReadyForServerCompletion: function(paymentId, txid) {
 fetch("/api/complete", {
@@ -51,19 +37,21 @@ method: 'POST',
 headers: { 'Content-Type': 'application/json' },
 body: JSON.stringify({ paymentId: paymentId, txid: txid })
 }).then(res => res.json())
-.then(data => alert("Плаќањето е успешно завршено!"));
+.then(data => alert("Плаќањето е успешно завршено!"))
+.catch(err => alert("Complete Error: " + err));
 },
 onCancel: function(paymentId) {
-alert("Плаќањето е откажано.");
+console.log("Cancelled:", paymentId);
 },
 onError: function(error, payment) {
-alert("Грешка при плаќање: " + JSON.stringify(error));
+// Овде ќе ја извадиме целата содржина на грешката наместо само {}
+alert("Детална грешка: " + (error ? (error.message || JSON.stringify(error)) : "Непозната грешка"));
 }
 };
 
 Pi.createPayment(paymentData, callbacks);
-}).catch(function(error) {
-alert("Грешка во автентикација: " + JSON.stringify(error));
+}).catch(function(err) {
+alert("Auth Error: " + JSON.stringify(err));
 });
 }
 </script>
