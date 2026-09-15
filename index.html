@@ -7,13 +7,33 @@
 <script>
 Pi.init({ version: "2.0", sandbox: false });
 
+// Функција која автоматски се извршува кога ќе се најде заглавено плаќање при автентикација
+function onIncompletePaymentFound(payment) {
+console.log("Incomplete payment found:", payment);
+if (payment && payment.identifier) {
+// Праќаме барање до Vercel бекендот да го затвори/комлетира заглавеното плаќање
+const txid = (payment.transaction && payment.transaction.txid) ? payment.transaction.txid : "resolved-by-dev";
+
+fetch("/api/complete", {
+method: 'POST',
+headers: { 'Content-Type': 'application/json' },
+body: JSON.stringify({ paymentId: payment.identifier, txid: txid })
+})
+.then(res => res.json())
+.then(data => {
+alert("Заглавената трансакција е успешно исчистена од серверот!");
+location.reload();
+})
+.catch(err => {
+console.error("Error clearing payment:", err);
+});
+}
+}
+
 function makePayment() {
 const scopes = ['username', 'payments'];
 
-function onIncompletePaymentFound(payment) {
-console.log("Incomplete payment found:", payment);
-}
-
+// Тука ја вклучуваме функцијата за недовршени плаќања
 Pi.authenticate(scopes, onIncompletePaymentFound).then(function(auth) {
 const paymentData = {
 amount: 0.1,
@@ -28,8 +48,7 @@ method: 'POST',
 headers: { 'Content-Type': 'application/json' },
 body: JSON.stringify({ paymentId: paymentId })
 }).then(res => res.json())
-.then(data => console.log("Approved:", data))
-.catch(err => alert("Approve Error: " + err));
+.then(data => console.log("Approved:", data));
 },
 onReadyForServerCompletion: function(paymentId, txid) {
 fetch("/api/complete", {
@@ -37,15 +56,13 @@ method: 'POST',
 headers: { 'Content-Type': 'application/json' },
 body: JSON.stringify({ paymentId: paymentId, txid: txid })
 }).then(res => res.json())
-.then(data => alert("Плаќањето е успешно завршено!"))
-.catch(err => alert("Complete Error: " + err));
+.then(data => alert("Плаќањето е успешно завршено!"));
 },
 onCancel: function(paymentId) {
 console.log("Cancelled:", paymentId);
 },
 onError: function(error, payment) {
-// Овде ќе ја извадиме целата содржина на грешката наместо само {}
-alert("Детална грешка: " + (error ? (error.message || JSON.stringify(error)) : "Непозната грешка"));
+alert("Грешка: " + (error ? error.message : "Непозната грешка"));
 }
 };
 
